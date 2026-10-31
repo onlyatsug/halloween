@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#070104">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>FELIZ HALLOWEEN ❖ SANCTUM GOTHICUM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Press+Start+2P&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --crimson: #dc143c;
+      --blood: #7a0418;
+      --dark-void: #050103;
+      --bone: #e8dcc8;
+      --gold-dim: #9e7b4f;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--dark-void);
+      font-family: 'Cinzel Decorative', serif;
+      color: var(--bone);
+      touch-action: none;
+    }
+
+    /* Main WebGL Shader Canvas */
+    #gl-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      display: block;
+    }
+
+    /* Gothic UI Overlay */
+    .gothic-ui {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: env(safe-area-inset-top, 18px) 16px env(safe-area-inset-bottom, 22px) 16px;
+    }
+
+    /* Ornate Gothic Cathedral Arch Frame */
+    .cathedral-frame {
+      position: fixed;
+      inset: 8px;
+      border: 1px solid rgba(180, 15, 45, 0.35);
+      box-shadow:
+        inset 0 0 35px rgba(160, 0, 30, 0.25),
+        0 0 15px rgba(0, 0, 0, 0.9);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .cathedral-frame::before,
+    .cathedral-frame::after {
+      content: "❖";
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--crimson);
+      font-size: 14px;
+      text-shadow: 0 0 10px var(--crimson);
+      background: var(--dark-void);
+      padding: 0 8px;
+    }
+
+    .cathedral-frame::before { top: -10px; }
+    .cathedral-frame::after { bottom: -10px; }
+
+    .corner-ornament {
+      position: fixed;
+      width: 34px;
+      height: 34px;
+      z-index: 4;
+      pointer-events: none;
+      opacity: 0.85;
+      filter: drop-shadow(0 0 6px rgba(220, 20, 60, 0.7));
+    }
+    .corner-tl { top: 12px; left: 12px; }
+    .corner-tr { top: 12px; right: 12px; transform: scaleX(-1); }
+    .corner-bl { bottom: 12px; left: 12px; transform: scaleY(-1); }
+    .corner-br { bottom: 12px; right: 12px; transform: scale(-1, -1); }
+
+    /* Top Header Banner */
+    .header-block {
+      text-align: center;
+      margin-top: 16px;
+      position: relative;
+      z-index: 5;
+      transform: translateZ(0);
+    }
+
+    .main-title {
+      font-family: 'UnifrakturMaguntia', 'Cinzel Decorative', cursive;
+      font-size: clamp(2.35rem, 9.5vw, 3.6rem);
+      font-weight: 400;
+      line-height: 1.02;
+      color: #fff2f4;
+      letter-spacing: 0.04em;
+      text-shadow:
+        0 0 8px #ff0a37,
+        0 0 22px #b80022,
+        0 0 42px #6b0014,
+        2px 3px 0px #2b0007;
+      animation: gothicFlicker 5s infinite alternate;
+      position: relative;
+    }
+
+    .subtitle-pixel {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(0.65rem, 2.7vw, 0.85rem);
+      color: #ff2a55;
+      letter-spacing: 0.16em;
+      margin-top: 10px;
+      text-shadow:
+        0 0 10px rgba(255, 15, 65, 0.9),
+        2px 2px 0px #1a0005;
+    }
+
+    @keyframes gothicFlicker {
+      0%, 18%, 22%, 25%, 53%, 57%, 100% {
+        text-shadow:
+          0 0 8px #ff0a37,
+          0 0 22px #c80028,
+          0 0 45px #7a0018,
+          2px 3px 0px #2b0007;
+        opacity: 1;
+      }
+      20%, 24%, 55% {
+        text-shadow:
+          0 0 3px #8a0018,
+          2px 3px 0px #1a0004;
+        opacity: 0.86;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fullscreen Custom WebGL Shader Canvas -->
+  <canvas id="gl-canvas"></canvas>
+
+  <!-- Gothic Cathedral Frame & Corner Filigree -->
+  <div class="cathedral-frame"></div>
+
+  <svg class="corner-ornament corner-tl" viewBox="0 0 40 40" fill="none">
+    <path d="M2 38V2H38" stroke="#dc143c" stroke-width="2"/>
+    <path d="M6 30V6H30" stroke="#e8dcc8" stroke-width="1" stroke-opacity="0.6"/>
+    <rect x="4" y="4" width="5" height="5" fill="#dc143c"/>
+    <circle cx="14" cy="14" r="2.5" fill="#dc143c"/>
+  </svg>
+  <svg class="corner-ornament corner-tr" viewBox="0 0 40 40" fill="none">
+    <path d="M2 38V2H38" stroke="#dc143c" stroke-width="2"/>
+    <path d="M6 30V6H30" stroke="#e8dcc8" stroke-width="1" stroke-opacity="0.6"/>
+    <rect x="4" y="4" width="5" height="5" fill="#dc143c"/>
+    <circle cx="14" cy="14" r="2.5" fill="#dc143c"/>
+  </svg>
+  <svg class="corner-ornament corner-bl" viewBox="0 0 40 40" fill="none">
+    <path d="M2 38V2H38" stroke="#dc143c" stroke-width="2"/>
+    <path d="M6 30V6H30" stroke="#e8dcc8" stroke-width="1" stroke-opacity="0.6"/>
+    <rect x="4" y="4" width="5" height="5" fill="#dc143c"/>
+    <circle cx="14" cy="14" r="2.5" fill="#dc143c"/>
+  </svg>
+  <svg class="corner-ornament corner-br" viewBox="0 0 40 40" fill="none">
+    <path d="M2 38V2H38" stroke="#dc143c" stroke-width="2"/>
+    <path d="M6 30V6H30" stroke="#e8dcc8" stroke-width="1" stroke-opacity="0.6"/>
+    <rect x="4" y="4" width="5" height="5" fill="#dc143c"/>
+    <circle cx="14" cy="14" r="2.5" fill="#dc143c"/>
+  </svg>
+
+  <!-- Main Foreground HUD -->
+  <div class="gothic-ui">
+    <header class="header-block">
+      <h1 class="main-title">Feliz Halloween</h1>
+      <div class="subtitle-pixel">@onlyatsug</div>
+    </header>
+  </div>
+
+  <script>
+    /* =========================================================================
+     * 1. PROCEDURAL PIXEL ART ENGINE (Offscreen 2D Canvas -> Crisp WebGL Texture)
+     * Draws a masterwork Gothic Thorny Rose, Floating Pixel Skulls, Candles & Bats
+     * ========================================================================= */
+    const PIXEL_W = 180;
+    const PIXEL_H = 320;
+    const pixelCanvas = document.createElement('canvas');
+    pixelCanvas.width = PIXEL_W;
+    pixelCanvas.height = PIXEL_H;
+    const pctx = pixelCanvas.getContext('2d');
+    pctx.imageSmoothingEnabled = false;
+
+    // Gothic Palette
+    const PAL = {
+      void: '#050002',
+      bloodDeep: '#2e0009',
+      bloodDark: '#590214',
+      crimson: '#9e0624',
+      scarlet: '#dc143c',
+      roseBright: '#ff2e55',
+      roseHighlight: '#ff8da1',
+      stemDark: '#0b170e',
+      stemMid: '#172e1c',
+      stemLight: '#284d2f',
+      thorn: '#b89f8d',
+      thornTip: '#ff1e42',
+      boneShadow: '#4a3e3d',
+      boneDark: '#7d6b65',
+      boneMid: '#b8a69a',
+      boneLight: '#e8dcc8',
+      boneWhite: '#fff9f0',
+      goldDark: '#5e3a14',
+      goldMid: '#b57c28',
+      goldBright: '#ffd269'
+    };
+
+    function px(x, y, color, w = 1, h = 1) {
+      pctx.fillStyle = color;
+      pctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+    }
+
+    // Detailed Pixel Art Skull Sprite (19x21)
+    const SKULL_SPRITE = [
+      "      BBBBBBB      ",
+      "    BBWWWWWWWBB    ",
+      "   BWWWWWWWWWWWB   ",
+      "  BWWWWWWWWWWWWWB  ",
+      "  BWWSSSSSSSSSWWB  ",
+      " BWWSSWWWWWWWSSWWB ",
+      " BWWSWWWWWWWWWSWWB ",
+      " BWWWRRRRWRRRRWWWB ",
+      " BWWWRgRRWRRgRWWWB ",
+      " BWWWRRRRWRRRRWWWB ",
+      " BWWWWWWWNWWWWWWWB ",
+      "  BWWWWWNNNWWWWWB  ",
+      "  BSSBWWNNNWWBSSB  ",
+      "   BSSBBBBBBBSSB   ",
+      "    BWWWWWWWWWB    ",
+      "    BWDBWDBWDBW    ",
+      "    BWWWWWWWWWB    ",
+      "     BWBWBWBWB     ",
+      "      BBBBBBB      "
+    ];
+
+    function drawPixelSkull(cx, cy, glowPhase, flip = false, scale = 1) {
+      const w = SKULL_SPRITE[0].length;
+      const h = SKULL_SPRITE.length;
+      const startX = Math.round(cx - (w * scale) / 2);
+      const startY = Math.round(cy - (h * scale) / 2);
+
+      // Crimson / Soul Aura behind the skull
+      const auraRadius = 12 + Math.sin(glowPhase * 2.0) * 2;
+      for (let ay = -auraRadius; ay <= auraRadius; ay++) {
+        for (let ax = -auraRadius; ax <= auraRadius; ax++) {
+          const d = Math.hypot(ax, ay);
+          if (d < auraRadius && d > auraRadius - 3 && ((ax + ay) & 1) === 0) {
+            px(cx + ax, cy + ay, '#4a0012');
+          }
+        }
+      }
+
+      const eyeCore = Math.sin(glowPhase * 3.2) > -0.2 ? '#ff1e42' : '#ff8da1';
+
+      for (let r = 0; r < h; r++) {
+        const row = SKULL_SPRITE[r];
+        for (let c = 0; c < w; c++) {
+          const ch = row[flip ? (w - 1 - c) : c];
+          if (ch === ' ') continue;
+          let col = PAL.boneLight;
+          if (ch === 'B') col = PAL.boneShadow;
+          else if (ch === 'S') col = PAL.boneDark;
+          else if (ch === 'D') col = PAL.boneMid;
+          else if (ch === 'W') col = (r < 5) ? PAL.boneWhite : PAL.boneLight;
+          else if (ch === 'N') col = '#140206';
+          else if (ch === 'R') col = '#2a0008';
+          else if (ch === 'g') col = eyeCore;
+          px(startX + c * scale, startY + r * scale, col, scale, scale);
+        }
+      }
+    }
+
+    // High-Definition Gothic Velvet Rose & Thorny Stem Sprite (96x210)
+    // Multi-layered folded crimson petals, sepals, thorny stalk & dark serrated leaves
+const ROSE_SPRITE = [
+  "",
+  "",
+  "",
+  "000000000000000000000000000000000014300000000000003444443332",
+  "0000000000000000000000000000000023497433000001233479899999862000022",
+  "0000000000000000000000000000002577899988432134688988888888997203365",
+  "0000000000000000000000000000015988888889997578998888788777899537885",
+  "00000000000000000000000000001589887767899998899998888986689997688973",
+  "000000000000000000000000000037888776579988779889877998756999887679951",
+  "000000000000000000000000000368998776589987688877899888767988776678983",
+  "000000000000000000000000124889987765589998777777777767679976655667993",
+  "000000000000000000000000377899887765587889976677777987689876654568995",
+  "000000000000000000000000368899876656675568997779999998898666643699984012244",
+  "000000000000000000000001357899876546675666789999888899987666656999852477774",
+  "00000000000000000000000135788976544655566556677766677776676679998764477763",
+  "0000000000000000000000002678999976564356555656667766666667899988664366772",
+  "000000000000000000000000156789898888435655555666666766668999986555445675100000000002441",
+  "000000000000000000000000045567789999755656555666666766899988665555444677675212121126752",
+  "000000000000000000000000023235567888887655555555566689998766455555444567788777777778641",
+  "000000000000000000000000000013345678899976555555568999876555555555443567788889888988862",
+  "0000000000000000000000000000023345677889986655566898776655555555554435677777888888888762",
+  "00000000000001100000000000000233344556799988566778765555555555555543345766778888888878762",
+  "000000000000045420000000000002333334455789998777655545455555555555433457656777788888777762",
+  "000000000000035666552000000003333334344567899986555555555656555555333456556777777888776544",
+  "0000000000000356777765420000033333333334456789987545555556555555553333465457676778887643331",
+  "00000000000003566777777520000333333334343445677998555555565555555533334655566778887754321",
+  "000000000000035666777666530003333333343433344567788655555555555544333346555567898866432",
+  "00000000000025677777665554200333333433344434344556775555555555554433334644556888876642",
+  "0000000000014677777765555430033333333345666655444557665666776555443223454456788766543",
+  "0000000000035777777766555443233566676678898888777778888888898877776423454457777654321",
+  "00000000014567777766655544332335666777678888888988888889888778787655566434576655431",
+  "0000000014566777676655444433333345555545788777788878888877766666554457533567665422",
+  "00000001466667676665544433333222234433334566566776577877666555443333443346676542",
+  "0000002466666667665555443333332322332222233333565556676655554433333343235776542",
+  "000002466666666666555544332332222222232322221234444445443433333333333224666532",
+  "00000355566767676655554433232212222223332222222323333333232333333323224666431",
+  "000002345567777777665544332322112222232322222222222222222223333332233456542",
+  "00000013455677777766554443332210122223232222222223232323232333332213344432",
+  "0000000234455667776665554433222101122222222222222222222222232322211234332",
+  "0000000023355677777776665544332200122222222222222222222222233322123333221011121",
+  "0000000012356777777777776654333210011222222222222222222222222221133322101222333322",
+  "0000000002466777777777776654443322000112222222222222222222222211232210022333444544331",
+  "0000000003566666666767666655443222210111111212121212121222221001110000122334455556554311",
+  "00000000046666555666666777665544332322221012111222111212121100001001122334455556666666553",
+  "000000002455554445565667676666554434333210000011001100000000000001122223345556666666655542",
+  "00000000344434344445555666676766555544332210000000000000000000001222233445566666666655542",
+  "00000000022212333444444455566666555544332200000000000000000000022222334455566666666654431",
+  "0000000000000023343333344555555555444320000000012332100000222333333334455666666666665433",
+  "0000000000000001122323333444444434332200a00000023333332323344444444445566666666666555432",
+  "000000000000000000002223333333222220000aa0000a02333444444444555656666666666667666555543",
+  "00000000000000000000000112121000000000000000aca0233445555545566667666666666666665544442",
+  "000000000000000000000000000000000000000000bbccc003345556566666666777677776665555555543",
+  "000000000000000000000000000000000000000000decec00124455666666666676766677766555544443",
+  "000000000000000000000000000000000000000000fddfb00013444556666666666766666766544443221",
+  "00000000000000000000000000000000000000000affff0000022334455555565556665667654433322",
+  "00000000000000000000000000000000000000000afffb00aaa0002334444555555655555666553333",
+  "00000000000000000000000000000000000000000bffc0000aaaa00012233444444544444556652233",
+  "00000000000000000000000000000000000000000dffa000aaaa00000000223333343333345664",
+  "00000000000000000000000000000000000aa0a00dff0000aaaa0000000a000222222222233320aa",
+  "0000000000000000000000000000000000aa0a0000d000000aab000000aa000000001210000100a",
+  "0000000000000000000000000000000000a00000000000000aab000000aa",
+  "000000000000000000000000000000aaaa000000000000000aab",
+  "000000000000000000000000000000aa000000000000000000aa",
+  "00000000000000000000000000000000000000000000000000aa",
+  "00000000000000000000000000000000000000000000000000aa",
+  "00000000000000000000000000000000000000000000000000ab",
+  "0000000000000000000000000000000000000000000000000aaa",
+  "00000000000000000000000000000000000000000000000000ab",
+  "0000000000000000000000000000000000000000000000000aaa",
+  "0000000000000000000000000000000000000000000000000aab",
+  "0000000000000000000000000000000000000000000000000aab",
+  "0000000000000000000000000000000000000000000000000aab",
+  "0000000000000000000000000000000000000000000000000aaa",
+  "0000000000000000000000000000000000000000000000000bab",
+  "0000000000000000000000000000000000000000000000000bbb",
+  "0000000000000000000000000000000000000000000000000bcb",
+  "0000000000000000000000000000000000aaa000000000000bbb",
+  "0000000000000000000000000000000000acbbaa000000000bbb",
+  "00000000000000000000000000000000000bccbaa00000000bbb",
+  "000000000000000000000000000000000000accbba0000000abb",
+  "0000000000000000000000000000000000000abcbaa000000abb",
+  "00000000000000000000000000000000000000acccbbba000bcb",
+  "000000000000000000000000000000000000000bcdcbbba00bcb",
+  "0000000000000000000000000000000000000000abbbabbabbdc",
+  "000000000000000000000000000000000000000000000aa0acdca",
+  "0000000000000000000000000000000000000000000000000cdc",
+  "0000000000000000000000000000000000000000000000000bdb",
+  "0000000000000000000000000000000000000000000000000cdc",
+  "0000000000000000000000000000000000000000000000000bec",
+  "0000000000000000000000000000000000000000000000000bdc0000aaaa",
+  "0000000000000000000000000000000000000000000000000bec00accccdcba",
+  "0000000000000000000000000000000000000000000000000cecaddddcdffecbaa",
+  "0000000000000000000000000000000000000000000000000bddccbccccddeedeecba",
+  "0000000000000000000000000000000000000000000000000cedbbbccdeedeefeeefec",
+  "0000000000000000000000000000000000000000000000000cfc0abcccdfffedeedecdc",
+  "0000000000000000000000000000000000000000000000000cfd000acccfffedcca000ab",
+  "0000000000000000000000000000000000000000000000000cfd0000accddc",
+  "0000000000000000000000000000000000000000000000000cfd",
+  "0000000000000000000000000000000000000000000000000cfe",
+  "0000000000000000000000000000000000000000000000000cfe",
+  "0000000000000000000000000000000000000000000000000cfd",
+  "0000000000000000000000000000000000000000000000000cfe000cb",
+  "0000000000000000000000000000000000000000000000000cfd000db",
+  "0000000000000000000000000000000000000000000000000cfd00bda",
+  "0000000000000000000000000000000000000000000000000bfea0cc",
+  "0000000000000000000000000000000000000000000000000bffa0dc",
+  "0000000000000000000000000000000000000000000000000affa0dc",
+  "0000000000000000000000000000000000000000000000000befbceb",
+  "0000000000000000000000000000000000000000000000000befbcd",
+  "0000000000000000000000000000000000000000000000000befbfd",
+  "0000000000000000000000000000000000000000000000000bdedeb",
+  "0000000000000000000000000000000000000000000000000bdffb",
+  "0000000000000000000000000000000000000000000000000adfda",
+  "00000000000000000000000000000000000000000000000000dfc",
+  "00000000000000000000000000000000000000000000000000cfb",
+  "00000000000000000000000000000000000000000000000000cfb",
+  "00000000000000000000000000000000000000000000000000cfb",
+  "00000000000000000000000000000000000000000000000000cfb",
+  "00000000000000000000000000000000000000000000000000cfb",
+  "00000000000000000000000000000000000000000000000000ceb",
+  "00000000000000000000000000000000000000000000000000ceb",
+  "00000000000000000000000000000000000000000000000000dfb",
+  "00000000000000000000000000000000000000000000000000deb",
+  "00000000000000000000000000000000000000000000000000dfb",
+  "00000000000000000000000000000000000000000000000000dfb",
+  "00000000000000000000000000000000000000000000000000dfb",
+  "00000000000000000000000000000000000000000000000000dfb",
+  "00000000000000000000000000000000000000000000000000efa",
+  "00000000000000000000000000000000000000000000000000dfb",
+  "00000000000000000000000000000000000000000000000000efb00000000abcbbbcbbbb",
+  "00000000000000000000000000000000000000000000000000dfa0000aabacddcddededcba",
+  "00000000000000000000000000000000000000000000000000dfa00abdddddcccccdddcddca",
+  "00000000000000000000000000000000000000000000000000dfa0cdddcdcccccdddddddcdbaa",
+  "00000000000000000000000000000000000000000000000000dfceddcddddddddededeeddcbcba",
+  "00000000000000000000000000000000000000000000000000dfec0adffecdcddefeeeddddccccb",
+  "00000000000000000000000000000000000000000000000000efd000beffeddeefffefeffeddccbb",
+  "0000000000000000000000000000000000000000000000b000cec0000dffffeeffffeeeededcbcbbb",
+  "0000000000000000000000000000000000000000000000ea00bca0000deffffedeeedeedddddbbbbbba",
+  "0000000000000000000000000000000000000000000000ea00bc000000dfeeffddddddcdddcccbbcbbb",
+  "0000000000000000000000000000000000000000000000db00bc000000dfefeffeddddddefffecbcbbbb",
+  "00000000000000000000000000000000000000000000000da0bc000000bffeefdeeccddddffecccbbbaba",
+  "00000000000000000000000000000000000000000000000ea0bc0000000dedefeefecdcdddddbcbbbaabab",
+  "0000000000000000000000000000bc00000000000000000da0bc0000000cddffddffeddeeedcccbbabaaaaa",
+  "0000000000000000000000bdcdddddbccccc00000000000db0cd0000000beffeceefffdccdcdccccbbbbaab",
+  "0000000000000000000aaccccddddeeeddddcdc00000000cd0cc00000000bffeccdeddfebbcccccccbaaaaa",
+  "000000000000000000bdcccddddddfffefeeeedca0000000dbcda00000000dfedcdeddffdcbcbcccccbbaba",
+  "00000000000000000cccccdddddccdefefefeeddccca0000dbcda00000000cddccdedefecdbbbcbcbcbbaba",
+  "000000000000000bbcccdddddddddddeefffeeddcedda000ebcd0000000000cdddeeddffdcddccbbbcbbabba",
+  "00000000000000abbbceeeeedddeddcddeffffefffeeeebbccdda000000000bdddeecdefdcdcccbbbbaaabaa",
+  "0000000000000bccbccddedeefeeeedddeefffffffffeedfffdda0000000000bceeecdeedcdcccccccaaababa",
+  "0000000000000bbbbcbccdcccdeeeeffffffefeefeefea0abfeda0000000000aceecbdeedcdbbbcdcccbaaaaa",
+  "0000000000abbbbccdddddccccefffffeeffeeedffdee0000cefb00000000000addcbcdedcdcbcbbbbbbabaaa",
+  "0000000000abbccdcdddddcddeddeffedeeffeddeedea00000aeb000000000000bbcbccdcccbbbbbbbbbabaaa",
+  "000000000aabbccdddddddbcddcdefffdedffedeeede000000acb0000000000000acbccdccdcbbbbabbbbbaaa",
+  "00000000aabbbbbcccddccddeedeffffdddeeddddeee0000000cb00000000000000abccdccccbbbbaaababaaa",
+  "00000000abbbabaaabbcccdeeeddfffdddddddddefeb0000000cb00000000000000bbcbcccbbabbba0aaa0aa",
+  "0000000aaaaabbbbbbbccddeddcddfedccdecdddefe00000000cb00000000000000abcbbbccbababaaaa0aaaa",
+  "0000000aabbcccddddcccdefdddedeeedddeceddefd00000000cca00000000000000bbbbbcccabbbbb000aaba",
+  "000000aaabbcccccccbccdddcdcddeeecdddcecddeb00000000bc00000000000000000abbccbbbbbbba00aaba",
+  "00000aaabcccbbbbbbbcddddcdcddeddcddcceccdd000000000bc000000000000000000abccbbbbbbbaa00aaaa",
+  "00000aaabbbbaaaaabbcccccbdcdddcdddccccccbb000000000bca000000000000000000acbcbabbabaa000aa",
+  "0000aaaabbabbbabbbbccdcbbccddddcccccbbcbbb000000000bca0000000000000000000bccbbababaa0000a",
+  "0000aaaabbabaa0bbbbccccbabccddbbbccbbbbbb0000000000aba00000000000000000000abbaaaaaaa",
+  "00000babbb0aabbbbcbcccccbccddcbbbccbbcbca00000000000bb000000000000000000000bba0aabaa",
+  "00000abba00aaabbbbbcbbcbabbbbbbbabcbbbba000000000000bb000000000000000000000000000aa",
+  "00000aaa00aaaabbbbbbbccbbbbbbbbbbbbbbb00000000000000bb",
+  "0000aaa000aaaaabaaabbbbbbbabbbbbaaaba000000000000000ba",
+  "0000a00000aaaaaaabbbbbabbbbbbbabaaaba000000000000000cba",
+  "00000000aaa00aaaabbbababababbbaa000a0000000000000000cb",
+  "00000000aaa00aababbbabbbababa0ab00000000000000000000bc",
+  "000000000a000aaaaaaaababaa0000a000000000000000000000ab",
+  "0000000000000abba00bbaa0a000000000000000000000000000ab",
+  "00000000000000aa000aa0000000000000000000000000000000aba",
+  "0000000000000000000000000000000000000000000000000000aba",
+  "0000000000000000000000000000000000000000000000000000aba",
+  "0000000000000000000000000000000000000000000000000000aca",
+  "00000000000000000000000000000000000000000000000000000ba",
+  "00000000000000000000000000000000000000000000000000000cb",
+  "00000000000000000000000000000000000000000000000000000ba000bb",
+  "00000000000000000000000000000000000000000000000000000ba000aa",
+  "00000000000000000000000000000000000000000000000000000ba00a",
+  "00000000000000000000000000000000000000000000000000000bb00a",
+  "00000000000000000000000000000000000000000000000000000bb0aa",
+  "00000000000000000000000000000000000000000000000000000bb0a",
+  "00000000000000000000000000000000000000000000000000000bbb",
+  "00000000000000000000000000000000000000000000000000000bbca",
+  "00000000000000000000000000000000000000000000000000000aabab",
+  "00000000000000000000000000000000000000000000000000000bbb",
+  "00000000000000000000000000000000000000000000000000000aaa",
+  "00000000000000000000000000000000000000000000000000000aa",
+  "00000000000000000000000000000000000000000000000000000aa",
+  "00000000000000000000000000000000000000000000000000000bb",
+  "000000000000000000000000000000000000000000000000000000a",
+  "000000000000000000000000000000000000000000000000000000a",
+  "00000000000000000000000000000000000000000000000000000aa",
+  "00000000000000000000000000000000000000000000000000000aa",
+  "00000000000000000000000000000000000000000000000000000aa",
+  "00000000000000000000000000000000000000000000000000000aa",
+  "00000000000000000000000000000000000000000000000000000aa",
+  "00000000000000000000000000000000000000000000000000000aa",
+  "000000000000000000000000000000000000000000000000000000a",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "0000000000000000000000000000000000000000000000000000a",
+  "0000000000000000000000000000000000000000000000000000a",
+];
+
+    const ROSE_PALETTE = [
+      null,
+      "#1c0105", // 1: deepest petal fold shadow
+      "#360209", // 2: very dark burgundy shadow
+      "#57030e", // 3: dark blood velvet
+      "#7a0414", // 4: rich crimson mid-shadow
+      "#9e061b", // 5: classic gothic crimson
+      "#c20a22", // 6: vibrant scarlet petal
+      "#e0122c", // 7: lit scarlet ridge
+      "#f5223d", // 8: bright red petal curl
+      "#ff4d63", // 9: specular velvet highlight
+      "#08120b", // a (10): deepest leaf/sepal shadow
+      "#0f2114", // b (11): dark forest leaf
+      "#18331e", // c (12): mid-dark gothic green
+      "#23472b", // d (13): stem/leaf midtone
+      "#32613b", // e (14): lit stem/vein green
+      "#498252"  // f (15): bright sepal/thorn tip highlight
+    ];
+
+    function drawThornyRose(centerX, bloomTopY, time, bloodPulse) {
+      // 1. Draw Thorny Briar Cathedral Arch framing the scene
+      for (let a = 0; a < 180; a += 2) {
+        const rad = (a * Math.PI) / 180;
+        const bx = Math.round(centerX + Math.cos(rad) * 76);
+        const by = Math.round(145 - Math.sin(rad) * 115);
+        px(bx, by, PAL.stemDark, 2, 2);
+        if (a % 14 === 0) {
+          const inX = Math.round(bx - Math.cos(rad) * 5);
+          const inY = Math.round(by + Math.sin(rad) * 5);
+          px(inX, inY, PAL.thornTip, 2, 2);
+        }
+      }
+
+      // 2. Render the Multi-Layered Velvet Rose Bud, Calyx, Stem, Thorns & Leaves
+      const spriteW = 96;
+      const spriteH = ROSE_SPRITE.length;
+      const baseX = Math.round(centerX - spriteW / 2);
+      const baseY = Math.round(bloomTopY);
+
+      for (let r = 0; r < spriteH; r++) {
+        const row = ROSE_SPRITE[r];
+        if (!row) continue;
+        // Subtle organic wind sway that increases gently down the stem
+        const swayFactor = r < 58 ? 0.35 : 0.35 + ((r - 58) / 150) * 1.4;
+        const swayX = Math.round(Math.sin(time * 1.8 - r * 0.035) * swayFactor);
+
+        for (let c = 0; c < row.length; c++) {
+          const ch = row[c];
+          if (ch === "0") continue;
+          const idx = parseInt(ch, 16);
+          let col = ROSE_PALETTE[idx];
+          if (bloodPulse > 0.25 && idx === 9) {
+            col = "#ffd6dd"; // pulse highlight on petal rims
+          }
+          px(baseX + c + swayX, baseY + r, col, 1, 1);
+        }
+
+        // Extra sharp crimson-tipped gothic thorns along the stalk
+        if (r > 72 && r < 185 && r % 19 === 0) {
+          const dir = (r % 38 === 0) ? 1 : -1;
+          const stalkX = baseX + 50 + swayX;
+          for (let t = 1; t <= 4; t++) {
+            px(stalkX + dir * t, baseY + r - (t >> 1), t === 4 ? PAL.thornTip : "#32613b", 1, 1);
+          }
+        }
+      }
+
+      // 3. Falling Blood Drops from the Velvet Outer Petals
+      const petalTips = [-28, -14, 0, 15, 29];
+      for (let i = 0; i < petalTips.length; i++) {
+        const cycle = (time * (20 + i * 4) + i * 33) % 140;
+        const dropX = centerX + petalTips[i];
+        const dropY = baseY + 52 + cycle;
+        if (dropY < PIXEL_H - 14) {
+          px(dropX, dropY - 2, PAL.bloodDark, 1, 2);
+          px(dropX, dropY, PAL.scarlet, 2, 3);
+          px(dropX, dropY + 1, PAL.roseHighlight, 1, 1);
+        }
+      }
+    }
+
+    // Animated Pixel Bats flying across the blood moon
+    function drawPixelBat(bx, by, flapPhase) {
+      const wingUp = Math.sin(flapPhase) > 0;
+      px(bx, by, '#120005', 2, 2);
+      px(bx, by - 1, '#ff1a40', 1, 1); // tiny glowing red eye
+      if (wingUp) {
+        px(bx - 4, by - 2, '#1f020a', 4, 2);
+        px(bx + 2, by - 2, '#1f020a', 4, 2);
+        px(bx - 6, by - 4, '#2e0009', 2, 2);
+        px(bx + 6, by - 4, '#2e0009', 2, 2);
+      } else {
+        px(bx - 4, by + 1, '#1f020a', 4, 2);
+        px(bx + 2, by + 1, '#1f020a', 4, 2);
+        px(bx - 6, by + 3, '#2e0009', 2, 2);
+        px(bx + 6, by + 3, '#2e0009', 2, 2);
+      }
+    }
+
+    // Gothic Altar Candles at bottom corners
+    function drawAltarCandles(time) {
+      const candlePositions = [22, 36, PIXEL_W - 36, PIXEL_W - 22];
+      candlePositions.forEach((cx, idx) => {
+        const h = (idx % 2 === 0) ? 32 : 22;
+        const baseY = PIXEL_H - 12;
+        // Wax body
+        px(cx - 3, baseY - h, PAL.boneMid, 6, h);
+        px(cx - 2, baseY - h, PAL.boneLight, 2, h);
+        // Melted wax drips
+        px(cx - 4, baseY - h + 3, PAL.boneLight, 2, 6);
+        px(cx + 2, baseY - h + 5, PAL.boneMid, 2, 8);
+        // Wick
+        px(cx, baseY - h - 2, '#1a0a0a', 1, 2);
+        // Flickering pixel flame
+        const flick = Math.round(Math.sin(time * 11 + idx * 2.3) * 1.5);
+        px(cx - 2 + flick, baseY - h - 8, PAL.scarlet, 4, 6);
+        px(cx - 1 + flick, baseY - h - 7, PAL.goldMid, 2, 5);
+        px(cx - 1 + flick, baseY - h - 5, PAL.goldBright, 2, 2);
+      });
+    }
+
+    // Render complete offscreen pixel scene each frame
+    function renderPixelScene(time, pointerX, pointerY, bloodPulse) {
+      pctx.clearRect(0, 0, PIXEL_W, PIXEL_H);
+
+      // Giant Dithered Blood Moon Halo behind the Rose
+      const moonX = PIXEL_W / 2 + (pointerX - 0.5) * 10;
+      const moonY = 112 + (pointerY - 0.5) * 8;
+      const moonR = 54;
+      for (let y = moonY - moonR; y <= moonY + moonR; y += 2) {
+        for (let x = moonX - moonR; x <= moonX + moonR; x += 2) {
+          const dist = Math.hypot(x - moonX, y - moonY);
+          if (dist < moonR) {
+            // Bayer-like checkerboard pixel dithering
+            const norm = dist / moonR;
+            if (norm < 0.72 || ((Math.floor(x / 2) + Math.floor(y / 2)) % 2 === 0)) {
+              px(x, y, norm > 0.85 ? PAL.bloodDeep : '#42010e', 2, 2);
+            }
+          }
+        }
+      }
+
+      // Draw Central Thorny Gothic Rose
+      drawThornyRose(PIXEL_W / 2, 68, time, bloodPulse);
+
+      // Orbiting / Floating Pixel Skulls (4 Cursed Skulls)
+      const skullConfigs = [
+        { baseX: 34,  baseY: 84,  phase: 0.0, flip: false, scale: 1 },
+        { baseX: 146, baseY: 84,  phase: 1.8, flip: true,  scale: 1 },
+        { baseX: 36,  baseY: 196, phase: 3.4, flip: false, scale: 1 },
+        { baseX: 144, baseY: 196, phase: 5.1, flip: true,  scale: 1 }
+      ];
+
+      skullConfigs.forEach((sk, i) => {
+        const floatX = sk.baseX + Math.cos(time * 1.4 + sk.phase) * 6 + (pointerX - 0.5) * -14;
+        const floatY = sk.baseY + Math.sin(time * 2.1 + sk.phase) * 7 + (pointerY - 0.5) * -10;
+        drawPixelSkull(floatX, floatY, time + sk.phase, sk.flip, sk.scale);
+      });
+
+      // Crown Mini Skull atop the Rose Arch
+      drawPixelSkull(PIXEL_W / 2, 42 + Math.sin(time * 2.5) * 3, time * 1.5, false, 1);
+
+      // Flying Pixel Bats
+      for (let b = 0; b < 3; b++) {
+        const bx = ((time * (18 + b * 7) + b * 65) % (PIXEL_W + 30)) - 15;
+        const by = 52 + b * 24 + Math.sin(time * 3 + b) * 8;
+        drawPixelBat(bx, by, time * 12 + b * 2);
+      }
+
+      // Altar Candles at the bottom
+      drawAltarCandles(time);
+    }
+
+    /* =========================================================================
+     * 2. MULTI-LAYER GOTHIC GLSL FRAGMENT SHADER (WebGL)
+     * - Volumetric Blood Fog & Domain-Warped Hellfire FBM
+     * - Interactive Touch Shockwaves & Blood Ripples
+     * - Chromatic Aberration, CRT Scanlines, Pixel Bloom & Gothic Vignette
+     * ========================================================================= */
+    const canvas = document.getElementById('gl-canvas');
+    const gl = canvas.getContext('webgl', { antialias: false, alpha: false });
+
+    const VERTEX_SHADER = `
+      attribute vec2 a_pos;
+      varying vec2 v_uv;
+      void main() {
+        v_uv = a_pos * 0.5 + 0.5;
+        gl_Position = vec4(a_pos, 0.0, 1.0);
+      }
+    `;
+
+    const FRAGMENT_SHADER = `
+      precision highp float;
+      varying vec2 v_uv;
+
+      uniform sampler2D u_pixelTex;
+      uniform vec2 u_res;
+      uniform float u_time;
+      uniform vec2 u_pointer;
+      uniform float u_pulse;
+
+      // Hash & 2D Noise for Volumetric Gothic Fog
+      float hash(vec2 p) {
+        p = fract(p * vec2(123.34, 456.21));
+        p += dot(p, p + 45.32);
+        return fract(p.x * p.y);
+      }
+
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        float a = hash(i);
+        float b = hash(i + vec2(1.0, 0.0));
+        float c = hash(i + vec2(0.0, 1.0));
+        float d = hash(i + vec2(1.0, 1.0));
+        return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+      }
+
+      // Fractal Brownian Motion (5 Octaves)
+      float fbm(vec2 p) {
+        float v = 0.0;
+        float amp = 0.5;
+        mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
+        for (int i = 0; i < 5; i++) {
+          v += amp * noise(p);
+          p = rot * p * 2.05;
+          amp *= 0.5;
+        }
+        return v;
+      }
+
+      void main() {
+        // Flip Y for canvas texture coordinates
+        vec2 uv = vec2(v_uv.x, 1.0 - v_uv.y);
+
+        // Aspect-corrected coordinates for circular shader effects
+        vec2 aspectUV = (uv - 0.5) * vec2(u_res.x / u_res.y, 1.0);
+        vec2 ptrAspect = (u_pointer - 0.5) * vec2(u_res.x / u_res.y, 1.0);
+        float distPtr = length(aspectUV - ptrAspect);
+
+        // 1. Touch & Blood-Pulse Shockwave Distortion
+        float ripple = sin(distPtr * 32.0 - u_time * 9.0) * exp(-distPtr * 5.5) * (0.012 + u_pulse * 0.025);
+        vec2 dir = normalize(aspectUV - ptrAspect + 0.0001);
+        vec2 warpedUV = uv + dir * ripple;
+
+        // Subtle heat haze rising from the bottom altar
+        float heatWave = sin(uv.y * 40.0 - u_time * 5.0) * 0.0022 * smoothstep(0.3, 1.0, uv.y);
+        warpedUV.x += heatWave;
+
+        // 2. Domain-Warped Volumetric Blood Fog & Hellfire Shader
+        vec2 q = vec2(
+          fbm(aspectUV * 3.0 + vec2(0.0, u_time * 0.25)),
+          fbm(aspectUV * 3.0 + vec2(5.2, -u_time * 0.18))
+        );
+        vec2 r = vec2(
+          fbm(aspectUV * 4.5 + 3.5 * q + vec2(1.7, -u_time * 0.35)),
+          fbm(aspectUV * 4.5 + 3.5 * q + vec2(8.3, u_time * 0.28))
+        );
+        float fogVal = fbm(aspectUV * 3.5 + 2.5 * r);
+
+        // Deep Gothic Color Grading for background shader
+        vec3 bgCol = mix(
+          vec3(0.02, 0.00, 0.01),
+          vec3(0.32, 0.01, 0.07),
+          clamp(fogVal * fogVal * 2.2, 0.0, 1.0)
+        );
+        bgCol = mix(bgCol, vec3(0.88, 0.06, 0.22), pow(clamp(fogVal, 0.0, 1.0), 4.0) * (0.65 + u_pulse * 0.6));
+
+        // Interactive crimson soul-flame around user's finger/cursor
+        float pointerGlow = exp(-distPtr * 4.2) * (0.45 + u_pulse * 0.55);
+        bgCol += vec3(0.95, 0.08, 0.25) * pointerGlow * (0.6 + 0.4 * fogVal);
+
+        // 3. Chromatic Aberration & Pixel Art Sampling
+        float caShift = 0.003 + u_pulse * 0.012 + pointerGlow * 0.006;
+        vec4 texC = texture2D(u_pixelTex, warpedUV);
+        vec4 texR = texture2D(u_pixelTex, warpedUV + vec2(caShift, 0.0));
+        vec4 texB = texture2D(u_pixelTex, warpedUV - vec2(caShift, 0.0));
+
+        vec3 pixelRGB = vec3(texR.r, texC.g, texB.b);
+        float pixelAlpha = max(texC.a, max(texR.a * 0.6, texB.a * 0.6));
+
+        // 4. Neighbor Glow / Crimson Neon Bloom around Pixel Art
+        vec3 bloom = vec3(0.0);
+        vec2 texel = 1.0 / vec2(180.0, 320.0);
+        for (int x = -2; x <= 2; x++) {
+          for (int y = -2; y <= 2; y++) {
+            vec2 off = vec2(float(x), float(y)) * texel * 1.6;
+            vec4 s = texture2D(u_pixelTex, warpedUV + off);
+            bloom += s.rgb * s.a;
+          }
+        }
+        bloom /= 25.0;
+
+        // Combine Background Shader + Bloom + Crisp Pixel Foreground
+        vec3 col = bgCol + bloom * vec3(1.3, 0.25, 0.45) * (0.85 + u_pulse * 0.6);
+        col = mix(col, pixelRGB, texC.a);
+
+        // 5. Rising Glowing Blood Embers (Procedural Shader Particles)
+        vec2 emberGrid = aspectUV * vec2(16.0, 9.0) + vec2(sin(u_time * 0.6), u_time * 1.8);
+        vec2 emberId = floor(emberGrid);
+        vec2 emberUv = fract(emberGrid) - 0.5;
+        float eSeed = hash(emberId);
+        if (eSeed > 0.76) {
+          vec2 ePos = vec2(sin(u_time * 2.0 + eSeed * 20.0) * 0.28, cos(u_time * 1.5 + eSeed * 15.0) * 0.28);
+          float eDist = length(emberUv - ePos);
+          float spark = smoothstep(0.09, 0.01, eDist) * fract(eSeed * 17.3);
+          col += vec3(1.0, 0.22, 0.35) * spark;
+        }
+
+        // 6. Gothic CRT Scanlines, Lightning Flash & Dark Cathedral Vignette
+        float scanline = 0.92 + 0.08 * sin(v_uv.y * u_res.y * 1.4);
+        col *= scanline;
+
+        // Periodic gothic lightning flash
+        float lightning = pow(max(0.0, sin(u_time * 0.9) * sin(u_time * 4.7) * sin(u_time * 13.3)), 14.0);
+        col += vec3(0.75, 0.05, 0.2) * lightning * 0.8 + vec3(0.5, 0.05, 0.15) * u_pulse * 0.45;
+
+        // Deep dramatic vignette
+        float vig = smoothstep(1.05, 0.22, length(aspectUV * vec2(1.15, 0.95)));
+        col *= mix(0.18, 1.0, vig);
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `;
+
+    function compileShader(type, source) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, source);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error(gl.getShaderInfoLog(s));
+      }
+      return s;
+    }
+
+    const prog = gl.createProgram();
+    gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, VERTEX_SHADER));
+    gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, FRAGMENT_SHADER));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+
+    // Fullscreen quad buffer
+    const quadBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+      gl.STATIC_DRAW
+    );
+
+    const aPos = gl.getAttribLocation(prog, 'a_pos');
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    // Nearest-neighbor Pixel Art Texture so pixels stay razor-sharp
+    const pixelTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, pixelTex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    const uRes = gl.getUniformLocation(prog, 'u_res');
+    const uTime = gl.getUniformLocation(prog, 'u_time');
+    const uPointer = gl.getUniformLocation(prog, 'u_pointer');
+    const uPulse = gl.getUniformLocation(prog, 'u_pulse');
+
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    /* =========================================================================
+     * 3. INTERACTIVITY: TOUCH, GYROSCOPE PARALLAX & BLOOD PULSE
+     * ========================================================================= */
+    let pointerX = 0.5;
+    let pointerY = 0.45;
+    let targetX = 0.5;
+    let targetY = 0.45;
+    let bloodPulse = 0.0;
+
+    function updatePointer(clientX, clientY) {
+      targetX = clientX / window.innerWidth;
+      targetY = clientY / window.innerHeight;
+    }
+
+    window.addEventListener('pointerdown', (e) => {
+      updatePointer(e.clientX, e.clientY);
+      bloodPulse = 1.0;
+      if (navigator.vibrate) {
+        navigator.vibrate(30);
+      }
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      updatePointer(e.clientX, e.clientY);
+    });
+
+    // Mobile Gyroscope Tilt Support
+    window.addEventListener('deviceorientation', (e) => {
+      if (e.gamma !== null && e.beta !== null) {
+        const gx = Math.max(-30, Math.min(30, e.gamma)) / 60 + 0.5;
+        const gy = Math.max(-30, Math.min(30, e.beta - 45)) / 60 + 0.5;
+        targetX = targetX * 0.7 + gx * 0.3;
+        targetY = targetY * 0.7 + gy * 0.3;
+      }
+    });
+
+    /* =========================================================================
+     * 4. MAIN 60FPS ANIMATION LOOP
+     * ========================================================================= */
+    const startTime = performance.now();
+
+    function animate(now) {
+      const elapsed = (now - startTime) * 0.001;
+
+      // Smooth pointer interpolation & pulse decay
+      pointerX += (targetX - pointerX) * 0.1;
+      pointerY += (targetY - pointerY) * 0.1;
+      bloodPulse *= 0.93;
+
+      // 1. Update Procedural Pixel Art Canvas
+      renderPixelScene(elapsed, pointerX, pointerY, bloodPulse);
+
+      // 2. Upload Pixel Art Canvas to WebGL Texture
+      gl.bindTexture(gl.TEXTURE_2D, pixelTex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pixelCanvas);
+
+      // 3. Render GLSL Gothic Shader Post-Processing & Background
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.uniform1f(uTime, elapsed);
+      gl.uniform2f(uPointer, pointerX, pointerY);
+      gl.uniform1f(uPulse, bloodPulse);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
